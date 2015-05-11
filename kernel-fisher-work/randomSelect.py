@@ -1,0 +1,7 @@
+import numpy as np
+import pandas as pd
+
+# Create random vector
+randomV = np.random.random(4)
+print 'The random vector :\n',randomV
+print 'hi'
