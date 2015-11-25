@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.linalg import inv
+from numpy import linalg as LA
 import pandas as pd
 
-raw_data = pd.read_csv('/Users/bud/GitHubProject/MachineLearning/kernel-fisher-work/census_abs2011_summary.csv')
+raw_data = pd.read_csv('/Users/bud/GitHubProject/MachineLearning/1.kernel-fisher-work/census_abs2011_summary.csv')
 #print(raw_data.shape)
 raw_data.head()
 
@@ -51,7 +53,7 @@ def gaussianKernel(x,z,sigma):
     sigma: a constant
     return a constant k, we could view it as the similarity of x and z
     """
-    k = np.exp(-1 *np.power(np.norm(x - z),2)/(2*np.power(sigma,2)) )
+    k = np.exp(-1 *np.power(LA.norm(x - z),2)/(2*np.power(sigma,2)) )
     return k
 
 #TEST
@@ -175,7 +177,7 @@ def getJandaVector(b,a):
   
 def getA(lamda,I,J,K,aVector):
     invContent = lamda*I+np.dot(np.dot(J,K),J)
-    JInver = np.dot(J,np.inv(invContent))
+    JInver = np.dot(J,inv(invContent))
     JK = np.dot(J,K)
     IJInverJK = I - np.dot(JInver,JK)
     A = (1.0/lamda)*np.dot( IJInverJK,aVector)
@@ -203,14 +205,17 @@ def testKFEAmodel(A,a0,KTesting):
     we could define the cretia of decsion boudry as 0
     """
     print 'threshold is ',a0.min(),'~',a0.max() 
-    D = np.dot(A.T,KTesting)
+    D = np.dot(A.T,KTesting.T)
+    print 'D: ',np.mean(D)
     print 'Min projection: ',D.min(), 'Max project:',D.max()
 #     We want to make sure we find the right threoshold a0
     bins = np.linspace(D.min(), D.max(), 100)
     plt.hist(D.T, bins, alpha=0.5, label='Decision boundry')
     plt.legend(loc='upper right')
     plt.show()
-    pred=np.sign(D)
+    
+    a0 = np.mean(D)
+    pred=np.sign(D-a0)
 #     pred = np.ones((1,D.shape[1]));
 #     class2 = D < 0
 #     pred[class2] = -1
@@ -404,8 +409,8 @@ def oneExperimentWithKFDA(X_training,y_training,y_testing,Kraw_traing, Kraw_test
     ########################## Evaluating  ######################################################################
     M = confusion_matrix((np.hstack(predKFDA)+1)/2,(y_testing+1)/2)
     print M
-#     print accuracy(M)
-#     print balanced_accuracy(M)
+    print accuracy(M)
+    print balanced_accuracy(M)
     return balanced_accuracy(M)
 
 
@@ -421,14 +426,13 @@ c = 1
 pVector = np.array([2,3])
 for i in xrange(0,1):
 #     sigma = sigmaVector[i]
-    sigma = 8.7
+    sigma = 1.1
 
     for j in xrange(0,1):
         X_training,y_training,X_testing,y_testing = seperateRowDataSet(X,y);
         Kraw_traing, Kraw_testing = getTrainTestGaussianKernelMatrix(X_training,X_testing, sigma)
         print Kraw_traing
         ba = oneExperimentWithKFDA(X_training,y_training,y_testing,Kraw_traing, Kraw_testing,lamda)
-        print ba
         
 # for i in xrange(0,2):
 #     p = pVector[i]
